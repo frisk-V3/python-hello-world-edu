@@ -1,28 +1,39 @@
-name: Release Binary
+name: Build and Release Python Binary
 
 on:
   push:
-    tags:
-      - 'v*' # v1.0, v1.1 などのタグが打たれた時だけ動く
+    branches:
+      - main
+    paths:
+      - '.github/workflows/**' # ymlが更新されたら動く
+      - 'main.py'              # コードが更新されても動く
 
 jobs:
   build:
-    runs-on: windows-latest # Windows用exeを作る場合
+    runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          
-      - name: Install Nuitka
-        run: pip install nuitka
+
+      - name: Install Nuitka and dependencies
+        run: |
+          pip install "Nuitka[onefile]" zstandard
 
       - name: Build with Nuitka
-        run: python -m nuitka --onefile --standalone main.py
+        # --assume-yes-for-downloads でエラーを回避
+        run: |
+          python -m nuitka --onefile --standalone --assume-yes-for-downloads --output-filename=my_app.exe main.py
 
-      - name: Create Release and Upload Asset
+      - name: Create or Update Release
         uses: softprops/action-gh-release@v1
         with:
-          files: main.exe
+          tag_name: "latest-build" # 特定のタグ名に固定して上書き
+          files: my_app.exe
+          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
