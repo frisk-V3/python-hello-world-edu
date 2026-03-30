@@ -9,5 +9,7 @@ def main():
     name = input("Enter your name: ")
     print(f"Hello, {name}! This is a standalone binary.")
 
+    input("\nPress Enter to exit...")  # ← これを追加
+
 if __name__ == "__main__":
     main()
